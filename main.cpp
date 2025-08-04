@@ -18,7 +18,6 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include <wtypes.h>
 #include <ctime>
 #include <filesystem>
 #include <string>
@@ -36,17 +35,9 @@ unsigned int loadCubemap(std::vector<std::string> faces);
 void ShowInfo(Shader &s);
 void GetDesktopResolution(float& horizontal, float& vertical)
 {
-	RECT desktop;
-	// Get a handle to the desktop window
-	const HWND hDesktop = GetDesktopWindow();
-	// Get the size of screen to the variable desktop
-	GetWindowRect(hDesktop, &desktop);
-	// The top left corner will have coordinates (0,0)
-	// and the bottom right corner will have coordinates
-	// (horizontal, vertical)
-	horizontal = desktop.right;
-	vertical = desktop.bottom;
-	
+	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+	horizontal = mode->width;
+	vertical = mode->height;
 }
 
 
@@ -152,9 +143,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 
 int main() {
-	GetDesktopResolution(SCREEN_WIDTH, SCREEN_HEIGHT); // get resolution for create window
-	camera.LookAtPos = point;
-
 	/* GLFW INIT */
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -162,6 +150,10 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	/* GLFW INIT */
+
+	// Move the call to GetDesktopResolution after glfwInit()
+	GetDesktopResolution(SCREEN_WIDTH, SCREEN_HEIGHT); // get resolution for create window
+	camera.LookAtPos = point;
 
 	/* GLFW WINDOW CREATION */
 	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL", glfwGetPrimaryMonitor(), NULL);
@@ -238,7 +230,7 @@ int main() {
 			texture,
 			glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
 			glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-			face->glyph->advance.x
+			static_cast<GLuint>(face->glyph->advance.x)
 		};
 		Characters.insert(std::pair<GLchar, Character>(c, character));
 	}
